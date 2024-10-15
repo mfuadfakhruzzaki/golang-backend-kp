@@ -7,60 +7,76 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
-var JWT_SECRET = os.Getenv("JWT_SECRET")
+var (
+	ErrSecretNotSet = errors.New("JWT_SECRET is not set in the environment")
+)
 
-// Pastikan JWT_SECRET ter-set
-func init() {
-    if JWT_SECRET == "" {
-        fmt.Println("JWT_SECRET is not set in the environment")
-    }
+// Claims defines the structure for JWT claims
+type Claims struct {
+	Email string `json:"email"`
+	jwt.StandardClaims
 }
 
 // GenerateJWT membuat token JWT berdasarkan email pengguna
 func GenerateJWT(email string) (string, error) {
-    mySigningKey := []byte(JWT_SECRET)
+	secretKey := os.Getenv("JWT_SECRET")
+	if secretKey == "" {
+		return "", ErrSecretNotSet
+	}
+	mySigningKey := []byte(secretKey)
 
-    token := jwt.New(jwt.SigningMethodHS256)
-    claims := token.Claims.(jwt.MapClaims)
+	// Membuat klaim JWT, termasuk email dan waktu kadaluarsa
+	claims := &Claims{
+		Email: email,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(72 * time.Hour).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    "your-app-name", // Ganti dengan nama aplikasi Anda
+		},
+	}
 
-    claims["authorized"] = true
-    claims["email"] = email
-    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	// Membuat token dengan klaim yang telah ditetapkan
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-    tokenString, err := token.SignedString(mySigningKey)
-    if err != nil {
-        return "", err
-    }
+	// Menandatangani token
+	tokenString, err := token.SignedString(mySigningKey)
+	if err != nil {
+		return "", err
+	}
 
-    fmt.Println("Token generated:", tokenString) // Debugging output
-    return tokenString, nil
+	fmt.Println("Token generated:", tokenString) // Output debugging
+	return tokenString, nil
 }
 
 // ValidateToken memvalidasi token JWT dan mengembalikan email pengguna jika valid
 func ValidateToken(tokenString string) (string, error) {
-    mySigningKey := []byte(JWT_SECRET)
+	secretKey := os.Getenv("JWT_SECRET")
+	if secretKey == "" {
+		return "", ErrSecretNotSet
+	}
+	mySigningKey := []byte(secretKey)
 
-    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-        }
-        return mySigningKey, nil
-    })
+	// Parse token
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Memastikan metode penandatanganan sesuai
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return mySigningKey, nil
+	})
 
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
-    if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-        email, ok := claims["email"].(string)
-        if !ok {
-            return "", errors.New("invalid token claims")
-        }
-        return email, nil
-    }
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
 
-    return "", errors.New("invalid token")
+	// Token valid, kembalikan email
+	return claims.Email, nil
 }
