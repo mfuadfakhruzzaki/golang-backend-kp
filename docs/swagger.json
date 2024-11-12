@@ -1,131 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API untuk Mengelola Profil Pengguna",
+        "title": "Backend API",
+        "contact": {},
+        "version": "1.0"
     },
     "paths": {
-        "/auth/github/callback": {
-            "get": {
-                "description": "This endpoint handles the callback from GitHub after the user has authenticated. It logs in the user or creates a new user account if the user does not already exist.",
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Handle GitHub OAuth callback",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth State",
-                        "name": "state",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "OAuth Code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirects to app with token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid OAuth state or code",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/github/login": {
-            "get": {
-                "description": "Redirects the user to the GitHub OAuth login page",
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Initiate GitHub OAuth",
-                "responses": {
-                    "302": {
-                        "description": "Redirects to GitHub OAuth login"
-                    }
-                }
-            }
-        },
-        "/auth/google/callback": {
-            "get": {
-                "description": "This endpoint handles the callback from Google after the user has authenticated. It logs in the user or creates a new user account if the user does not already exist.",
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Handle Google OAuth callback",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth State",
-                        "name": "state",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "OAuth Code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirects to app with token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid OAuth state or code",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/google/login": {
-            "get": {
-                "description": "Redirects the user to the Google OAuth login page",
-                "tags": [
-                    "OAuth"
-                ],
-                "summary": "Initiate Google OAuth",
-                "responses": {
-                    "302": {
-                        "description": "Redirects to Google OAuth login"
-                    }
-                }
-            }
-        },
         "/auth/login": {
             "post": {
                 "description": "This endpoint allows users to log in by providing email and password. A JWT token will be returned upon successful login.",
@@ -321,6 +202,60 @@
             }
         },
         "/packages/{id}": {
+            "get": {
+                "description": "Retrieve a single package using its unique ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Get a package by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Package ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Package details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Package"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid package ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Package not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error fetching package",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Allows a user to select a package by its ID, updates the user's selected package",
                 "produces": [
@@ -381,67 +316,6 @@
                             "additionalProperties": {
                                 "type": "string"
                             }
-                        }
-                    }
-                }
-            }
-        },
-        "/users/profile/picture": {
-            "post": {
-                "description": "Upload a profile picture for the currently logged-in user",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Upload profile picture",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "Profile picture file (jpg, jpeg, png)",
-                        "name": "profile_picture",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Profile picture uploaded successfully",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request or file type",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized or email not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "403": {
-                        "description": "Email not verified",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     }
                 }

@@ -71,93 +71,10 @@ definitions:
     type: object
 info:
   contact: {}
+  description: API untuk Mengelola Profil Pengguna
+  title: Backend API
+  version: "1.0"
 paths:
-  /auth/github/callback:
-    get:
-      description: This endpoint handles the callback from GitHub after the user has
-        authenticated. It logs in the user or creates a new user account if the user
-        does not already exist.
-      parameters:
-      - description: OAuth State
-        in: query
-        name: state
-        required: true
-        type: string
-      - description: OAuth Code
-        in: query
-        name: code
-        required: true
-        type: string
-      responses:
-        "302":
-          description: Redirects to app with token
-          schema:
-            type: string
-        "400":
-          description: Invalid OAuth state or code
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Handle GitHub OAuth callback
-      tags:
-      - OAuth
-  /auth/github/login:
-    get:
-      description: Redirects the user to the GitHub OAuth login page
-      responses:
-        "302":
-          description: Redirects to GitHub OAuth login
-      summary: Initiate GitHub OAuth
-      tags:
-      - OAuth
-  /auth/google/callback:
-    get:
-      description: This endpoint handles the callback from Google after the user has
-        authenticated. It logs in the user or creates a new user account if the user
-        does not already exist.
-      parameters:
-      - description: OAuth State
-        in: query
-        name: state
-        required: true
-        type: string
-      - description: OAuth Code
-        in: query
-        name: code
-        required: true
-        type: string
-      responses:
-        "302":
-          description: Redirects to app with token
-          schema:
-            type: string
-        "400":
-          description: Invalid OAuth state or code
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Handle Google OAuth callback
-      tags:
-      - OAuth
-  /auth/google/login:
-    get:
-      description: Redirects the user to the Google OAuth login page
-      responses:
-        "302":
-          description: Redirects to Google OAuth login
-      summary: Initiate Google OAuth
-      tags:
-      - OAuth
   /auth/login:
     post:
       consumes:
@@ -289,6 +206,42 @@ paths:
       tags:
       - Packages
   /packages/{id}:
+    get:
+      description: Retrieve a single package using its unique ID
+      parameters:
+      - description: Package ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Package details
+          schema:
+            $ref: '#/definitions/models.Package'
+        "400":
+          description: Invalid package ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Package not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error fetching package
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a package by ID
+      tags:
+      - Packages
     post:
       description: Allows a user to select a package by its ID, updates the user's
         selected package
@@ -333,46 +286,4 @@ paths:
       summary: Select a package
       tags:
       - Packages
-  /users/profile/picture:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a profile picture for the currently logged-in user
-      parameters:
-      - description: Profile picture file (jpg, jpeg, png)
-        in: formData
-        name: profile_picture
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Profile picture uploaded successfully
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid request or file type
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized or email not found
-          schema:
-            additionalProperties: true
-            type: object
-        "403":
-          description: Email not verified
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Upload profile picture
-      tags:
-      - User
 swagger: "2.0"
